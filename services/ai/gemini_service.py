@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import json
 import re
 from typing import Any
@@ -16,8 +15,7 @@ class GeminiService:
     def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
         settings = get_settings()
         self.api_key = api_key or settings.gemini_api_key or ""
-        # Single source of truth from env, falling back to models/gemini-3.5-flash
-        self.model = model or os.getenv("GEMINI_MODEL", "models/gemini-3.5-flash")
+        self.model = model or settings.gemini_model
         self.client = None
         if self.api_key:
             try:
@@ -76,9 +74,7 @@ class GeminiService:
         )
 
         try:
-            # Every call resolved dynamically using os.getenv
-            target_model = os.getenv("GEMINI_MODEL", "models/gemini-3.5-flash")
-            response = client.models.generate_content(model=target_model, contents=prompt)
+            response = client.models.generate_content(model=self.model, contents=prompt)
             raw_text = response.text or ""
             parsed = self._parse_json_response(raw_text)
             questions = parsed.get("questions", [])
@@ -143,9 +139,7 @@ class GeminiService:
         )
 
         try:
-            # Every call resolved dynamically using os.getenv
-            target_model = os.getenv("GEMINI_MODEL", "models/gemini-3.5-flash")
-            response = client.models.generate_content(model=target_model, contents=prompt)
+            response = client.models.generate_content(model=self.model, contents=prompt)
             raw_text = response.text or ""
             parsed = self._parse_json_response(raw_text)
             return self._normalize_evaluation(parsed)
